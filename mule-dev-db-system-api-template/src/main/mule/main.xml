@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getAllRecords" doc:id="cb7e22bf-529f-4ee7-b1cf-988406136a2e" >
+		<logger level="INFO" doc:name="Logger" doc:id="5c4eab1a-4697-493e-a6e3-7d059824f02e" message="Received GET ALL RECORDS request"/>
+		<db:select doc:name="Select" doc:id="a4134236-1876-4399-b9a8-4691375c8a12" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM products;]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="19df2aa9-5f2a-4d92-aed1-0c3333f0f5cc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f29c97d5-c0de-4807-872c-db2b74f33960" message="Finished GET ALL RECORDS request"/>
+	</flow>
+	<flow name="getRecordById" doc:id="1808a6b2-34d2-4e23-9228-274d3a62f5bb" >
+		<logger level="INFO" doc:name="Logger" doc:id="abea5321-7fb7-4330-98b8-08e908abb0e4" message="Received get record details request: record_id: #[attributes.uriParams.record_id]"/>
+		<db:select doc:name="Select" doc:id="e541648a-ea7c-4ba5-bba0-2cec38e98d74" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM products WHERE record_id = :record_id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	record_id: attributes.uriParams.record_id
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="489916e1-3daa-470b-9572-54ead8192324">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="24075f03-cb07-49ca-ba03-10078fdf9ae0" message="Finished GET record details request: record_id: #[attributes.uriParams.record_id]"/>
+	</flow>
+	<flow name="createRecord" doc:id="36708b93-5ed0-4c67-a235-d65366437208" >
+		<logger level="INFO" doc:name="Logger" doc:id="3bc7deec-ddd1-4be6-afce-a9ae6e3cebe3" message="Inserting record into database: product_name = #[payload.product_name]"/>
+		<db:insert doc:name="Insert" doc:id="fd150d45-ce2e-4d5d-95c6-d43533f05eb1" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO products (key1, key2)
+VALUES (:key1, :key2)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	key1: payload.key1,
+	key2: payload.key2
+}]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Logger" doc:id="1610c299-77a8-4d4b-a686-496a58ed45ae" message="Finished inserting record into database: product_name = #[payload.product_name]"/>
+	</flow>
+	<flow name="UpdateRecordById" doc:id="eb5a9337-855a-4070-8be9-be4a27f120f5" >
+		<logger level="INFO" doc:name="Logger" doc:id="bae0273e-fbdd-44c0-9fe4-4948b1698214" message="Received UPDATE record details request: record_id: #[attributes.uriParams.record_id]"/>
+		<db:update doc:name="Update" doc:id="06f121f1-c095-4047-a324-e1140f2825e7" config-ref="Database_Config">
+			<db:sql ><![CDATA[UPDATE records
+SET key1 = :key1,
+	key2 = :key2
+WHERE record_id = :record_id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	record_id: attributes.uriParams.record_id,
+	key1: payload.key1,
+	key2: payload.key2
+}]]]></db:input-parameters>
+		</db:update>
+		<logger level="INFO" doc:name="Logger" doc:id="1b7b40d4-1a00-4a50-96f3-57f56231ccf3" message="Finished UPDATE record details request: record_id: #[attributes.uriParams.record_id]"/>
+	</flow>
+	<flow name="deleteRecordById" doc:id="4323595a-1ed2-48b7-87d6-0051c1d31ae3" >
+		<logger level="INFO" doc:name="Logger" doc:id="60004ac6-1301-4f9b-b63c-9447c8bb4b6f" message="Received DELETE record request: record_id: #[attributes.uriParams.record_id]"/>
+		<db:delete doc:name="Delete" doc:id="cac8fab6-605d-4cb1-aef4-c5fcb4aa6c4b" config-ref="Database_Config">
+			<db:sql ><![CDATA[DELETE FROM products
+WHERE record_id = :record_id;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	record_id: attributes.uriParams.record_id
+}]]]></db:input-parameters>
+		</db:delete>
+		<logger level="INFO" doc:name="Logger" doc:id="31f098d5-ab1c-49bd-852f-e99238f22a80" message="Finished DELETE record request: record_id: #[attributes.uriParams.record_id]"/>
+	</flow>
+</mule>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	
+	<flow name="livenessCheck" doc:id="7f447231-c562-47f4-af7b-02ede9fe167d" >
+			<http:listener doc:name="Listener" doc:id="62347942-205c-433c-830c-dd7053eb3d04" config-ref="HTTP_Listener_config" path="/alive">
+				<http:response statusCode="200" />
+				<http:error-response statusCode="500" >
+					<http:body ><![CDATA[#[DOWN]]]></http:body>
+				</http:error-response>
+			</http:listener>
+			<set-payload value='UP' doc:name="Set Payload" doc:id="f2bbebea-019a-422f-9fcd-74d406d27228" />
+		</flow>
+		<flow name="readinessCheck">
+			<http:listener config-ref="HTTP_Listener_config" path="/ready">
+			<http:response statusCode="200" />
+			<http:error-response statusCode="500">
+			<http:body><![CDATA[DOWN]]></http:body>
+			</http:error-response>
+			</http:listener>
+			<flow-ref name="check-all-dependencies-are-alive" />
+			<set-payload value="UP" />
+		</flow>
+		<sub-flow name="check-all-dependencies-are-alive">
+			<logger />
+		</sub-flow>
+
+
+</mule>
