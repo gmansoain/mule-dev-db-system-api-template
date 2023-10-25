@@ -20,10 +20,6 @@
 			<logger level="INFO" doc:name="ERROR IN DB - No records found at inventory_id" doc:id="f0161f8e-61bd-4be4-96e3-e8f5e1b90628" message="Finished GET ALL INVENTORY ITEMS request WITH ERROR - No records found in the DB at inventory_id = #[vars.inventory_id]"/>
 			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - No record has been found at inventory_id = " ++ vars.inventory_id as String&#10;}]' doc:name="Set Payload" doc:id="06c8407d-442c-4ddd-b641-b4d22b512d85" />
 		</on-error-propagate>
-		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="ccd2b09a-a3ca-4b8b-9e24-f8da68726fdd" type="GON_DB: NO_RECORDS_FOUND_IN_GET_BY_PRODUCT_ID">
-			<logger level="INFO" doc:name="ERROR IN DB - No records found at product_id" doc:id="7e247899-42ae-4043-8aad-646732731523" message="Finished GET  INVENTORY BY PRODUCT ID Request WITH ERROR - No records found in the DB at product_id = #[vars.product_id]"/>
-			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - No record has been found at product_id = " ++ vars.product_id as String&#10;}]' doc:name="Set Payload" doc:id="17c882f2-928a-465f-8617-563d058edf2c" />
-		</on-error-propagate>
 		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f62f2d47-cd58-4c1f-abd5-84ac278b9e6c" type="GON_DB: NO_RECORD_CREATED">
 			<logger level="INFO" doc:name="ERROR IN DB - No record created" doc:id="a6aa4bf1-fc63-4169-9c7c-b794ea2423cc" message="Finished inserting inventory item into database WITH ERROR: product_id = #[vars.product_id]"/>
 			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - No record has been created for product_id = " ++ vars.product_id as String&#10;}]' doc:name="Set Payload" doc:id="cb5158fb-dc0c-4986-89a1-3390fd524e66" />
