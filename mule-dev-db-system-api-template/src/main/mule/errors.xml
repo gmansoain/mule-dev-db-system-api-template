@@ -2,4 +2,35 @@
 
 <mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"></mule>
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<error-handler name="GON_DB_Error_Handler" doc:id="d7038e8e-6970-4bf0-b78c-e0bea721ac1d" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="7ef034cf-c213-46b0-831a-aedb9f2fd5c1" type="DB:BAD_SQL_SYNTAX, DB:CONNECTIVITY, DB:QUERY_EXECUTION">
+			<logger level="INFO" doc:name="ERROR IN DB - No connectivity to DB Server" doc:id="2be31549-16ab-4248-84c9-1b6238bd1a47" message="ERROR IN DB - No connectivity to DB Server" />
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - " ++ error.description as String&#10;}]' doc:name="Set Payload" doc:id="e8e23118-ef17-47b1-b5b0-d69aa71105f2" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="81b3720a-1e22-4ff7-bd69-eecb252c94de" type="GON_DB:DELETE_NO_RECORDS">
+			<logger level="INFO" doc:name="Logger" doc:id="00d0245b-9d91-4833-b212-183742dd6bb7" message="Item not found in DELETE Inventory by ID Request. Invalid Inventory ID = #[attributes.uriParams.inventory_id]"/>
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - No records deleted. Inventory ID " ++ vars.inventory_id as String ++ " not found"&#10;}]' doc:name="Set Payload" doc:id="a72ad51f-4010-4970-b83a-056e2322baad" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="54e3b1dc-40b9-42f3-a09c-7a98ac82057f" type="GON_DB: NO_RECORDS_FOUND_IN_GET_ALL">
+			<logger level="INFO" doc:name="ERROR IN DB - No records found" doc:id="2e9b5eba-230c-436f-bbe0-b3934008b4b2" message="Finished GET ALL INVENTORY ITEMS request WITH ERROR - No records found in the DB"/>
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - No record has been found. Review your query"&#10;}]' doc:name="Set Payload" doc:id="2c774607-4c1f-4065-9a36-774f7876a05f" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5890787e-7d18-4f27-adb2-7f1ebc4cbf51" type="GON_DB: NO_RECORDS_FOUND_IN_GET_BY_ID">
+			<logger level="INFO" doc:name="ERROR IN DB - No records found at inventory_id" doc:id="f0161f8e-61bd-4be4-96e3-e8f5e1b90628" message="Finished GET ALL INVENTORY ITEMS request WITH ERROR - No records found in the DB at inventory_id = #[vars.inventory_id]"/>
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - No record has been found at inventory_id = " ++ vars.inventory_id as String&#10;}]' doc:name="Set Payload" doc:id="06c8407d-442c-4ddd-b641-b4d22b512d85" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="ccd2b09a-a3ca-4b8b-9e24-f8da68726fdd" type="GON_DB: NO_RECORDS_FOUND_IN_GET_BY_PRODUCT_ID">
+			<logger level="INFO" doc:name="ERROR IN DB - No records found at product_id" doc:id="7e247899-42ae-4043-8aad-646732731523" message="Finished GET  INVENTORY BY PRODUCT ID Request WITH ERROR - No records found in the DB at product_id = #[vars.product_id]"/>
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - No record has been found at product_id = " ++ vars.product_id as String&#10;}]' doc:name="Set Payload" doc:id="17c882f2-928a-465f-8617-563d058edf2c" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f62f2d47-cd58-4c1f-abd5-84ac278b9e6c" type="GON_DB: NO_RECORD_CREATED">
+			<logger level="INFO" doc:name="ERROR IN DB - No record created" doc:id="a6aa4bf1-fc63-4169-9c7c-b794ea2423cc" message="Finished inserting inventory item into database WITH ERROR: product_id = #[vars.product_id]"/>
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - No record has been created for product_id = " ++ vars.product_id as String&#10;}]' doc:name="Set Payload" doc:id="cb5158fb-dc0c-4986-89a1-3390fd524e66" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f0deb9d2-78e0-40c8-becf-15873644a607" type="GON_DB: NO_RECORD_UPDATED">
+			<logger level="INFO" doc:name="ERROR IN DB - No record updated" doc:id="53b1be5c-84ec-40cb-8be4-34f26874c07f" message="Finished updating inventory item into database WITH ERROR: inventory_id = #[vars.inventory_id]"/>
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "500",&#10;	responseMessage: "ERROR IN DB - No record has been updated for inventory_id = " ++ vars.inventory_id as String&#10;}]' doc:name="Set Payload" doc:id="c8217234-7648-481a-892b-a4e709b45e91" />
+		</on-error-propagate>
+	</error-handler>
+</mule>

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
 	
 	<flow name="livenessCheck" doc:id="7f447231-c562-47f4-af7b-02ede9fe167d" >
 			<http:listener doc:name="Listener" doc:id="62347942-205c-433c-830c-dd7053eb3d04" config-ref="HTTP_Listener_config" path="/alive">
@@ -26,7 +27,17 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 			<set-payload value="UP" />
 		</flow>
 		<sub-flow name="check-all-dependencies-are-alive">
-			<logger />
+		<db:select doc:name="SELECT * FROM inventory WHERE record_id = 1" doc:id="17fef6a4-9270-4297-b3be-8eaffc23369f" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM inventory WHERE record_id = 1]]></db:sql>
+		</db:select>
+		<choice doc:name="Check Select query returns data" doc:id="f877c2fc-f416-4752-b9ae-1b2c92942085" >
+			<when expression="#[sizeOf(payload) == 0]">
+				<raise-error doc:name="GON_DB: NO_RECORDS_FOUND_IN_GET_BY_ID" doc:id="7a69f5d5-9519-4000-9c55-501a426d5ac6" type="GON_DB: NO_RECORDS_FOUND_IN_GET_BY_ID" description="No records found in the DB at record_id"/>
+			</when>
+			<otherwise >
+				<set-payload value="UP" doc:name="Set Payload" doc:id="c9e8bc55-b088-44d4-bf96-34e03a775be0" />
+			</otherwise>
+		</choice>
 		</sub-flow>
 
 

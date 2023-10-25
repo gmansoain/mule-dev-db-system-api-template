@@ -19,4 +19,5 @@ http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/m
 		<http:listener-connection host="${http.host}" port="${http.port}" />
 	</http:listener-config>
 	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="2bd98ce9-4e4e-40d1-b4e4-11d0f3ae6305" flowRef="livenessCheck" />
+	<configuration doc:name="Configuration" doc:id="15a91a75-1b6c-4c1f-84d0-461fea3ccb63" defaultErrorHandler-ref="GON_DB_Error_Handler" />
 </mule>

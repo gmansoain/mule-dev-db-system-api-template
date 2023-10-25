@@ -6,29 +6,19 @@
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<flow name="getAllRecords" doc:id="cb7e22bf-529f-4ee7-b1cf-988406136a2e" >
-		<logger level="INFO" doc:name="Logger" doc:id="5c4eab1a-4697-493e-a6e3-7d059824f02e" message="Received GET ALL RECORDS request"/>
-		<db:select doc:name="Select" doc:id="a4134236-1876-4399-b9a8-4691375c8a12" config-ref="Database_Config">
-			<db:sql ><![CDATA[SELECT * FROM products;]]></db:sql>
+		<logger level="INFO" doc:name="Received GET ALL RECORDS Request" doc:id="5c4eab1a-4697-493e-a6e3-7d059824f02e" message="Received GET ALL RECORDS Request"/>
+		<try doc:name="Try" doc:id="62c06b8a-81e3-4af3-b385-a1a73869d752" >
+			<db:select doc:name="SELECT * FROM products" doc:id="a4134236-1876-4399-b9a8-4691375c8a12" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM products;]]></db:sql>
 		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="19df2aa9-5f2a-4d92-aed1-0c3333f0f5cc" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-payload]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="f29c97d5-c0de-4807-872c-db2b74f33960" message="Finished GET ALL RECORDS request"/>
-	</flow>
-	<flow name="getRecordById" doc:id="1808a6b2-34d2-4e23-9228-274d3a62f5bb" >
-		<logger level="INFO" doc:name="Logger" doc:id="abea5321-7fb7-4330-98b8-08e908abb0e4" message="Received get record details request: record_id: #[attributes.uriParams.record_id]"/>
-		<db:select doc:name="Select" doc:id="e541648a-ea7c-4ba5-bba0-2cec38e98d74" config-ref="Database_Config">
-			<db:sql ><![CDATA[SELECT * FROM products WHERE record_id = :record_id]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
-	record_id: attributes.uriParams.record_id
-}]]]></db:input-parameters>
-		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="489916e1-3daa-470b-9572-54ead8192324">
+		</try>
+		<choice doc:name="Check response is not empty" doc:id="1c4b6a99-6b77-4795-acf8-6f77a97cbdf4" >
+			<when expression="sizeOf(payload) == 0">
+				<raise-error doc:name="GON_DB: NO_RECORDS_FOUND_IN_GET_ALL" doc:id="79d36a1b-62da-49d4-af04-c6976974106e" type="GON_DB: NO_RECORDS_FOUND_IN_GET_ALL" description="No records found in the DB"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="SUCCESS - Finished GET ALL RECORDS request" doc:id="f29c97d5-c0de-4807-872c-db2b74f33960" message="SUCCESS - Finished GET ALL RECORDS request" />
+				<ee:transform doc:name="Preparing Response" doc:id="19df2aa9-5f2a-4d92-aed1-0c3333f0f5cc">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -36,44 +26,105 @@ output application/json
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="24075f03-cb07-49ca-ba03-10078fdf9ae0" message="Finished GET record details request: record_id: #[attributes.uriParams.record_id]"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="getRecordById" doc:id="1808a6b2-34d2-4e23-9228-274d3a62f5bb" >
+		<logger level="INFO" doc:name="Received GET RECORD BY ID Request" doc:id="abea5321-7fb7-4330-98b8-08e908abb0e4" message="Received GET RECORD BY ID Request: record_id: #[attributes.uriParams.record_id]"/>
+		<set-variable value="#[attributes.uriParams.record_id]" doc:name="record_id" doc:id="ee7a8e5e-ceba-4297-ad85-d4d5a2186fa6" variableName="record_id"/>
+		<try doc:name="Try" doc:id="1670b1eb-6405-4998-b2f3-a08191972025" >
+			<db:select doc:name="SELECT * FROM products WHERE record_id = [RECORD_ID]" doc:id="e541648a-ea7c-4ba5-bba0-2cec38e98d74" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM products WHERE record_id = :record_id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	record_id: vars.record_id
+}]]]></db:input-parameters>
+		</db:select>
+		</try>
+		<choice doc:name="Check response is not empty" doc:id="859d8745-479c-414a-bdb3-f2974d3987fa" >
+			<when expression="sizeOf(payload) == 0">
+				<raise-error doc:name="GON_DB: NO_RECORDS_FOUND_IN_GET_BY_ID" doc:id="a2d19104-b09c-4ade-95de-85bfaf2aea77" type="GON_DB: NO_RECORDS_FOUND_IN_GET_BY_ID" description="No records found in the DB at RECORD_ID"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Preparing Response" doc:id="489916e1-3daa-470b-9572-54ead8192324">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<logger level="INFO" doc:name="SUCCESS - Finished GET RECORD BY ID" doc:id="24075f03-cb07-49ca-ba03-10078fdf9ae0" message="SUCCESS - Finished GET RECORD BY ID. record_id = #[vars.record_id]. Response: #[payload]" />
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="createRecord" doc:id="36708b93-5ed0-4c67-a235-d65366437208" >
-		<logger level="INFO" doc:name="Logger" doc:id="3bc7deec-ddd1-4be6-afce-a9ae6e3cebe3" message="Inserting record into database: product_name = #[payload.product_name]"/>
-		<db:insert doc:name="Insert" doc:id="fd150d45-ce2e-4d5d-95c6-d43533f05eb1" config-ref="Database_Config">
-			<db:sql ><![CDATA[INSERT INTO products (key1, key2)
+		<logger level="INFO" doc:name="Received CREATE RECORD Request" doc:id="3bc7deec-ddd1-4be6-afce-a9ae6e3cebe3" message="Received CREATE RECORD Request: product_name = #[payload.product_name]"/>
+		<try doc:name="Try" doc:id="4173f63a-dc67-4d6d-a0ac-fadfffcff5e4" >
+			<db:insert doc:name="Insert" doc:id="fd150d45-ce2e-4d5d-95c6-d43533f05eb1" config-ref="Database_Config">
+			<db:sql><![CDATA[INSERT INTO TABLE (key1, key2)
 VALUES (:key1, :key2)]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
+			<db:input-parameters><![CDATA[#[{
 	key1: payload.key1,
 	key2: payload.key2
 }]]]></db:input-parameters>
 		</db:insert>
-		<logger level="INFO" doc:name="Logger" doc:id="1610c299-77a8-4d4b-a686-496a58ed45ae" message="Finished inserting record into database: product_name = #[payload.product_name]"/>
+		</try>
+		<choice doc:name="Check Number of records created &gt; 0" doc:id="289bc15a-0439-4a91-9e60-781e1f84ce66" >
+			<when expression="payload.affectedRows == 0">
+				<raise-error doc:name="GON_DB: NO_RECORD_CREATED" doc:id="c0dca8a0-0b9a-431f-a051-2a524dc41ffa" type="GON_DB: NO_RECORD_CREATED" description="No record created in the DB"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="SUCCESS - Finished inserting record into database" doc:id="1610c299-77a8-4d4b-a686-496a58ed45ae" message="SUCCESS - Finished inserting record into database: product_name = #[payload.product_name]" />
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	responseStatus: "201",&#10;	responseMessage: "SUCCESS - Record created"&#10;}]' doc:name="SUCCESS - Record created" doc:id="ad2adf16-b116-4961-90a9-e96732592cd9" />
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="UpdateRecordById" doc:id="eb5a9337-855a-4070-8be9-be4a27f120f5" >
-		<logger level="INFO" doc:name="Logger" doc:id="bae0273e-fbdd-44c0-9fe4-4948b1698214" message="Received UPDATE record details request: record_id: #[attributes.uriParams.record_id]"/>
-		<db:update doc:name="Update" doc:id="06f121f1-c095-4047-a324-e1140f2825e7" config-ref="Database_Config">
-			<db:sql ><![CDATA[UPDATE records
+		<logger level="INFO" doc:name="Received UPDATE RECORD BY ID Request" doc:id="bae0273e-fbdd-44c0-9fe4-4948b1698214" message="Received UPDATE RECORD BY ID Request: record_id: #[attributes.uriParams.record_id]. Details: #[payload]"/>
+		<set-variable value="#[attributes.uriParams.record_id]" doc:name="record_id" doc:id="b57b57aa-4277-44e1-84be-08070b9fe173" variableName="record_id"/>
+		<try doc:name="Try" doc:id="70c0905b-21e1-4a0e-b787-004be1e5b980" >
+			<db:update doc:name="Update" doc:id="06f121f1-c095-4047-a324-e1140f2825e7" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE records
 SET key1 = :key1,
 	key2 = :key2
 WHERE record_id = :record_id]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
+			<db:input-parameters><![CDATA[#[{
 	record_id: attributes.uriParams.record_id,
 	key1: payload.key1,
 	key2: payload.key2
 }]]]></db:input-parameters>
 		</db:update>
-		<logger level="INFO" doc:name="Logger" doc:id="1b7b40d4-1a00-4a50-96f3-57f56231ccf3" message="Finished UPDATE record details request: record_id: #[attributes.uriParams.record_id]"/>
+		</try>
+		<choice doc:name="Choice" doc:id="9274928a-2829-47f0-8bcf-a153052eb253" >
+			<when expression="payload.affectedRows == 0">
+				<raise-error doc:name="GON_DB: NO_RECORD_UPDATED" doc:id="375f5520-a8bc-41a8-96f7-00c93526bb3c" type="GON_DB: NO_RECORD_UPDATED" description="No record updated in the DB"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="SUCCESS - Finished UPDATE RECORD BY ID Request" doc:id="1b7b40d4-1a00-4a50-96f3-57f56231ccf3" message="SUCCESS - Finished UPDATE RECORD BY ID Request: record_id: #[vars.record_id]" />
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"responseStatus": "201",&#10;	"responseMessage": "SUCCESS - Record updated at record_id = " ++ vars.record_id as String&#10;}]' doc:name="SUCCESS - Record created" doc:id="759f6c4a-3ddb-4b36-8811-6b62b4184325" />
+			</otherwise>
+		</choice>
 	</flow>
 	<flow name="deleteRecordById" doc:id="4323595a-1ed2-48b7-87d6-0051c1d31ae3" >
-		<logger level="INFO" doc:name="Logger" doc:id="60004ac6-1301-4f9b-b63c-9447c8bb4b6f" message="Received DELETE record request: record_id: #[attributes.uriParams.record_id]"/>
-		<db:delete doc:name="Delete" doc:id="cac8fab6-605d-4cb1-aef4-c5fcb4aa6c4b" config-ref="Database_Config">
-			<db:sql ><![CDATA[DELETE FROM products
+		<logger level="INFO" doc:name="Received DELETE RECORD BY ID Request" doc:id="60004ac6-1301-4f9b-b63c-9447c8bb4b6f" message="Received DELETE RECORD BY ID Request: record_id: #[attributes.uriParams.record_id]"/>
+		<set-variable value="#[attributes.uriParams.record_id]" doc:name="record_id" doc:id="a38537f0-eb2e-463c-8b7a-8b756d38980c" variableName="record_id"/>
+		<try doc:name="Try" doc:id="5190da20-512a-49f7-a9f8-88ef30a63a75" >
+			<db:delete doc:name="Delete" doc:id="cac8fab6-605d-4cb1-aef4-c5fcb4aa6c4b" config-ref="Database_Config">
+			<db:sql><![CDATA[DELETE FROM products
 WHERE record_id = :record_id;]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
+			<db:input-parameters><![CDATA[#[{
 	record_id: attributes.uriParams.record_id
 }]]]></db:input-parameters>
 		</db:delete>
-		<logger level="INFO" doc:name="Logger" doc:id="31f098d5-ab1c-49bd-852f-e99238f22a80" message="Finished DELETE record request: record_id: #[attributes.uriParams.record_id]"/>
+		</try>
+		<choice doc:name="Check Record has been deleted" doc:id="4a9e1575-ede1-4fc8-b7e1-06567fb8ac64" >
+			<when expression="#[payload == 1]">
+				<logger level="INFO" doc:name="SUCCESS - Finished DELETE RECORD BY ID RequesT" doc:id="31f098d5-ab1c-49bd-852f-e99238f22a80" message="SUCCESS - Finished DELETE RECORD BY ID Request: record_id: #[vars.record_id]" />
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"responseStatus": "201",&#10;	"responseMessage": "SUCCESS - Record deleted. record_id = " ++ vars.record_id as String&#10;}]' doc:name="SUCCESS - Record deleted" doc:id="eb2166dd-115f-4fa4-acfc-da04f317464e" />
+			</when>
+			<otherwise >
+				<raise-error doc:name="GON_DB:DELETE_NO_RECORDS" doc:id="c331719c-acf9-4dcc-9a34-c06cd0293c59" type="GON_DB:DELETE_NO_RECORDS" description="Record not found to be deleted"/>
+			</otherwise>
+		</choice>
 	</flow>
 </mule>
