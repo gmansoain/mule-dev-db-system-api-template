@@ -1,3 +1,8 @@
+# API specification
+api:
+  name: "${project.artifactId}"
+  version: "${project.version}"
+
 database:
   host: "cloud-services.demos.mulesoft.com"
   port: "30522"
